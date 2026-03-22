@@ -48,8 +48,16 @@ def search_kanoon(query, pages=1):
     links = []
     print(f"[*] Searching Indian Kanoon for: {query}")
     for page in range(pages):
-        url = f"https://indiankanoon.org/search/?formInput={urllib.parse.quote(query)}&pagenum={page}"
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        target_url = f"https://indiankanoon.org/search/?formInput={urllib.parse.quote(query)}&pagenum={page}"
+        
+        # Route through Residential Proxy if running on Google Cloud
+        if os.environ.get("SCRAPER_API_KEY"):
+            api_key = os.environ.get("SCRAPER_API_KEY")
+            proxy_url = f"http://api.scraperapi.com?api_key={api_key}&url={urllib.parse.quote(target_url)}"
+            req = urllib.request.Request(proxy_url)
+        else:
+            req = urllib.request.Request(target_url, headers={'User-Agent': 'Mozilla/5.0'})
+            
         try:
             html = urllib.request.urlopen(req).read()
             soup = BeautifulSoup(html, 'html.parser')
@@ -71,7 +79,13 @@ def search_kanoon(query, pages=1):
     return list(set(links))
 
 def extract_case_text(url):
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    if os.environ.get("SCRAPER_API_KEY"):
+        api_key = os.environ.get("SCRAPER_API_KEY")
+        proxy_url = f"http://api.scraperapi.com?api_key={api_key}&url={urllib.parse.quote(url)}"
+        req = urllib.request.Request(proxy_url)
+    else:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        
     try:
         html = urllib.request.urlopen(req).read()
         soup = BeautifulSoup(html, 'html.parser')
