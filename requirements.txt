@@ -7,3 +7,6 @@ pydantic==2.10.6
 python-multipart==0.0.9
 PyPDF2==3.0.1
 python-docx==1.1.0
+beautifulsoup4
+qdrant-client
+google-genai
