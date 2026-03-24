@@ -14,7 +14,7 @@ def _call(prompt: str) -> str:
     resp = model.generate_content(prompt)
     return resp.text.strip()
 
-def run_advocate_a(intake: dict, precedents: list, current_position: int, round_num: int) -> dict:
+def run_advocate_a(intake: dict, precedents: list, current_position: int, round_num: int, custom_strategy: str = None) -> dict:
     """Party 1 advocate — argues for the claimant."""
     prec_text = "\n".join([
         f"- {p['title']} ({p['forum']}, {p['year']}): settled at ₹{p['settled_amount']:,}. {p['key_principle']}"
@@ -28,6 +28,8 @@ Relevant Indian Precedents:
 
 Current Round: {round_num}
 Party 1 Current Position: ₹{current_position:,}
+
+{f"CRITICAL INSTRUCTION FROM YOUR HUMAN CLIENT: Use exactly this strategy/argument: '{custom_strategy}'. You MUST dramatically incorporate this demand into your message!" if custom_strategy else ""}
 
 Your job: State Party 1's negotiation position firmly but reasonably, grounded in the precedents above.
 - Round 1: State opening position strongly (claim full amount, cite precedents)

@@ -94,6 +94,7 @@ class NegotiateRequest(BaseModel):
     round_num: int               # 1, 2, or 3
     party1_position: Optional[int] = None   # current positions (None on round 1)
     party2_position: Optional[int] = None
+    custom_strategy: Optional[str] = None
 
 class DraftRequest(BaseModel):
     intake: dict
@@ -224,7 +225,7 @@ async def negotiate_route(req: NegotiateRequest):
         b_pos = req.party2_position if req.party2_position is not None else 0
 
         # Run the 3 agents in sequence
-        advocate_a = run_advocate_a(req.intake, req.precedents, a_pos, req.round_num)
+        advocate_a = run_advocate_a(req.intake, req.precedents, a_pos, req.round_num, req.custom_strategy)
         advocate_b = run_advocate_b(req.intake, req.precedents, b_pos, req.round_num)
         mediator = run_mediator(
             req.intake, req.precedents,
@@ -285,6 +286,7 @@ async def translate_route(req: TranslateRequest):
             "Telugu": "Telugu (Telugu script, తెలుగు)",
             "Marathi": "Marathi (Devanagari script, मराठी)",
             "Bengali": "Bengali (Bengali script, বাংলা)",
+            "Malayalam": "Malayalam (Malayalam script, മലയാളം)",
             "Kannada": "Kannada (Kannada script, ಕನ್ನಡ)",
         }
 
