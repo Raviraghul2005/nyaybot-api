@@ -10,6 +10,7 @@ from agents.rag import search_precedents
 from agents.advocate import run_advocate_a, run_advocate_b
 from agents.mediator import run_mediator
 from agents.drafter import run_drafter
+from agents.negotiation_bounds import predict_boundary_values
 
 app = FastAPI(title="NyayBot API", version="1.0.0")
 
@@ -94,6 +95,9 @@ class NegotiateRequest(BaseModel):
     round_num: int               # 1, 2, or 3
     party1_position: Optional[int] = None   # current positions (None on round 1)
     party2_position: Optional[int] = None
+
+class BoundaryRequest(BaseModel):
+    intake: dict
 
 class DraftRequest(BaseModel):
     intake: dict
@@ -218,10 +222,32 @@ async def negotiate_route(req: NegotiateRequest):
     """
     try:
         amount = req.intake.get("amount", 280000)
+        ml_boundaries = None
+
+        # Try ML boundaries first; keep API resilient if model is unavailable.
+        try:
+            ml_boundaries = predict_boundary_values(req.intake)
+        except Exception:
+            ml_boundaries = None
 
         # Starting positions if round 1
-        a_pos = req.party1_position if req.party1_position is not None else amount
-        b_pos = req.party2_position if req.party2_position is not None else 0
+        if req.party1_position is not None:
+            a_pos = req.party1_position
+        else:
+            a_pos = (
+                ml_boundaries["boundary_high"]
+                if ml_boundaries
+                else amount
+            )
+
+        if req.party2_position is not None:
+            b_pos = req.party2_position
+        else:
+            b_pos = (
+                ml_boundaries["boundary_low"]
+                if ml_boundaries
+                else 0
+            )
 
         # Run the 3 agents in sequence
         advocate_a = run_advocate_a(req.intake, req.precedents, a_pos, req.round_num)
@@ -241,8 +267,21 @@ async def negotiate_route(req: NegotiateRequest):
                 "advocate_b": advocate_b,
                 "mediator": mediator,
                 "converged": mediator.get("converged", False),
+                "ml_boundaries": ml_boundaries,
             }
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/negotiation-boundaries")
+async def boundaries_route(req: BoundaryRequest):
+    """
+    Predicts ML-powered settlement boundary values from intake data.
+    """
+    try:
+        boundaries = predict_boundary_values(req.intake)
+        return {"success": True, "data": boundaries}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -8,10 +8,14 @@ load_dotenv()
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
 MODEL = "gemini-2.5-flash"
+REQUEST_TIMEOUT_SECONDS = 30
 
 def _call(prompt: str) -> str:
     model = genai.GenerativeModel(MODEL)
-    resp = model.generate_content(prompt)
+    resp = model.generate_content(
+        prompt,
+        request_options={"timeout": REQUEST_TIMEOUT_SECONDS},
+    )
     return resp.text.strip()
 
 def run_advocate_a(intake: dict, precedents: list, current_position: int, round_num: int) -> dict:

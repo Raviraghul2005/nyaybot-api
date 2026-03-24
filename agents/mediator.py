@@ -8,6 +8,7 @@ load_dotenv()
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
 MODEL = "gemini-2.5-flash"
+REQUEST_TIMEOUT_SECONDS = 30
 
 def run_mediator(intake: dict, precedents: list, a_position: int, b_position: int,
                  a_message: str, b_message: str, round_num: int) -> dict:
@@ -49,5 +50,8 @@ Return ONLY this JSON:
 }}"""
 
     model = genai.GenerativeModel(MODEL)
-    resp = model.generate_content(prompt)
+    resp = model.generate_content(
+        prompt,
+        request_options={"timeout": REQUEST_TIMEOUT_SECONDS},
+    )
     return safe_parse_json(resp.text)
