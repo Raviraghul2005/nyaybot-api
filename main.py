@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
-
+from fastapi.middleware.cors import CORSMiddleware
 from agents.intake import run_intake
 from agents.rag import search_precedents
 from agents.advocate import run_advocate_a, run_advocate_b
@@ -13,6 +13,14 @@ from agents.drafter import run_drafter
 from agents.negotiation_bounds import predict_boundary_values
 
 app = FastAPI(title="NyayBot API", version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # allow all (for development)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.add_middleware(
     CORSMiddleware,
